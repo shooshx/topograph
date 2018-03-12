@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head>
+<meta charset="UTF-8">
+<script src="topo_js_main.js"></script>
+
+<script type="text/javascript">
+
+var ctx;
+function start() {
+    ctx = mycanvas.getContext('2d')
+
+    Module.loadMesh("models/bunny.obj");
+    Module.paint()
+}
+
+</script>
+<style>
+
+#mycanvas {
+    border: 1px solid black;
+}
+
+</style>
+</head>
+<body id="body" onload="start()" >
+    <canvas id="mycanvas" width="800" height="800"></canvas>
+</body>
+</html>
