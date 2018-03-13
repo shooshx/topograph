@@ -239,6 +239,12 @@ public:
         M_ASSERT(len != 0.0);
         v[0] /= len; v[1] /= len; v[2] /= len;
     }
+    Vec3 unitized()
+    {
+        Vec3 r = *this;
+        r.unitize();
+        return r;
+    }
 
     bool isNear(const Vec3& vert) const
     {

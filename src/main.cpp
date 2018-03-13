@@ -85,7 +85,7 @@ public:
 
 
     float distToPoint(const Vec3& pnt) {
-        return Vec3::dotProd(normal, pnt) + p;
+        return Vec3::dotProd(normal, pnt) + p - add_d;
     }
 
     bool segmentIntersect(const Vec3& pnt1, const Vec3& pnt2, Vec3& outp) {
@@ -126,9 +126,11 @@ unique_ptr<Lines> g_lines;
 
 
 // https://stackoverflow.com/questions/3142469/determining-the-intersection-of-a-triangle-and-a-plane
-void topograph() 
+void topograph(int lvlCount, float interval) 
 {
-    Plane plane( Vec3(0,0,1), Vec3(0,0,300) );
+    LOG("topograph " << lvlCount << " " << interval);
+    Plane plane( Vec3(0,0,1), Vec3(0,0, 0) );
+    //Plane plane(Vec3(0.5, 0, 1).unitized(), Vec3(0, 0, 0));
 
     Mesh& mesh = *g_mesh;
     mesh.m_vtxdist.resize(mesh.m_vtx.size());
@@ -137,25 +139,38 @@ void topograph()
         mesh.m_vtxdist[i] = d;
     }
 
-    g_lines.reset(new Lines);
+    if (!g_lines)
+        g_lines.reset(new Lines);
     Lines& lines = *g_lines;
+    lines.pairs.clear();
 
-    vector<Vec3> intp;
-    for (int i = 0; i < mesh.m_idx.size(); i += 3) 
+    plane.add_d = 0;
+
+    for (int lvl = 0; lvl < lvlCount; ++lvl)
     {
-        const Vec3& va = mesh.m_vtx[mesh.m_idx[i]];
-        const Vec3& vb = mesh.m_vtx[mesh.m_idx[i + 1]];
-        const Vec3& vc = mesh.m_vtx[mesh.m_idx[i + 2]];
+        int linesCountStart = lines.pairs.size();
+        vector<Vec3> intp;
+        for (int i = 0; i < mesh.m_idx.size(); i += 3) 
+        {
+            const Vec3& va = mesh.m_vtx[mesh.m_idx[i]];
+            const Vec3& vb = mesh.m_vtx[mesh.m_idx[i + 1]];
+            const Vec3& vc = mesh.m_vtx[mesh.m_idx[i + 2]];
 
-        plane.triangleIntersect(va, vb, vc, intp);
-        if (!intp.empty()) {
-            if (intp.size() == 2) {
-                lines.pairs.push_back(intp[0]);
-                lines.pairs.push_back(intp[1]);
+            plane.triangleIntersect(va, vb, vc, intp);
+            if (!intp.empty()) {
+                if (intp.size() == 2) {
+                    lines.pairs.push_back(intp[0]);
+                    lines.pairs.push_back(intp[1]);
+                }
+                intp.clear();
             }
-            intp.clear();
         }
+
+        //LOG("lvl " << lvl << " z=" << plane.add_d << "  " << lines.pairs.size() - linesCountStart);
+
+        plane.add_d += interval;
     }
+    LOG(lines.pairs.size() << " lines");
 }
 
 #ifdef EMSCRIPTEN
@@ -191,5 +206,10 @@ int main()
 {
     loadMesh("C:/projects/topograph/models/bunny.obj");
     topograph();
+}
+#else
+int main() // called when everything was loaded
+{
+    EM_ASM(start());
 }
 #endif

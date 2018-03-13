@@ -4,6 +4,7 @@
 <script src="topo_js_main.js"></script>
 
 <script type="text/javascript">
+"use strict";
 
 var ctx;
 function start() {
@@ -13,21 +14,91 @@ function start() {
     //Module.paintMesh()
 
     var start = Date.now()
-    Module.topograph();
+    Module.topograph(60, 20);
     Module.paintLines();
     console.log("elapsed=" + (Date.now() - start))
 }
 
+var WIDTH = 800
+var HEIGHT = 800
+
+function input_changed() {
+    if (count_num.value == "")
+        return;
+    var countNum = parseInt(count_num.value)
+    if (isNaN(countNum) || countNum <= 0)
+        return;
+
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+    var start = Date.now()
+    Module.topograph(countNum, parseFloat(interval_slider.value));
+    //Module.topograph(60, 20);
+    Module.paintLines();
+    console.log("elapsed=" + (Date.now() - start))
+}
+
+
 </script>
 <style>
 
+body {
+    font-family: Verdana;
+}
 #mycanvas {
     border: 1px solid black;
 }
 
+#controls {
+    margin: 4px;
+}
+#count_num {
+    width: 100px;
+}
+
+#interval_slider {
+
+}
+
+.slider {
+    -webkit-appearance: none;
+    width: 170px;
+    height: 10px;
+    border-radius: 5px;
+    background: #afafaf;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%; 
+    background: #555555;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #555555;
+    cursor: pointer;
+}
+
+
 </style>
 </head>
-<body id="body" onload="start()" >
+<body id="body"  >
+    <div id="controls">
+        Interval: <input class="slider" id="interval_slider" type="range" min="1" max="100" value="20" oninput="input_changed()">
+        Line Count: <input id="count_num" type="number" min="1" step="1" pattern="d*" value="60" oninput="input_changed()">
+    </div>
     <canvas id="mycanvas" width="800" height="800"></canvas>
 </body>
 </html>
