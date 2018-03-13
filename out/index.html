@@ -10,7 +10,12 @@ function start() {
     ctx = mycanvas.getContext('2d')
 
     Module.loadMesh("models/bunny.obj");
-    Module.paint()
+    //Module.paintMesh()
+
+    var start = Date.now()
+    Module.topograph();
+    Module.paintLines();
+    console.log("elapsed=" + (Date.now() - start))
 }
 
 </script>

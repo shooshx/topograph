@@ -1,0 +1,2 @@
+rem --profiling -s DEMANGLE_SUPPORT=1  -s TOTAL_MEMORY=20000000
+%EMSCRIPTEN%\emcc -O3 --bind --memory-init-file 0 --memory-init-file 0 -Wno-switch -std=c++11 -Isrc src/main.cpp src/Mesh.cpp --embed-file models/bunny.obj -o out/topo_js_main.html 
