@@ -88,10 +88,7 @@ public:
         return Vec3::dotProd(normal, pnt) + p - add_d;
     }
 
-    bool segmentIntersect(const Vec3& pnt1, const Vec3& pnt2, Vec3& outp) {
-        float d1 = distToPoint(pnt1);
-        float d2 = distToPoint(pnt2);
-
+    bool segmentIntersect(float d1, float d2, const Vec3& pnt1, const Vec3& pnt2, Vec3& outp) {
         if (d1*d2 > 0)  // points on the same side of plane
             return false;
 
@@ -100,17 +97,19 @@ public:
         return true;
     }
 
-    void triangleIntersect(const Vec3& triA, const Vec3& triB, const Vec3 triC, vector<Vec3>& outSegTips)
+    int triangleIntersect(float dA, float dB, float dC, const Vec3& triA, const Vec3& triB, const Vec3 triC, Vec3 outSegTips[])
     {
+        int arrIdx = 0;
         Vec3 intersectionPoint;
-        if (segmentIntersect(triA, triB, intersectionPoint))
-            outSegTips.push_back(intersectionPoint);
+        if (segmentIntersect(dA, dB, triA, triB, intersectionPoint))
+            outSegTips[arrIdx++] = intersectionPoint;
 
-        if (segmentIntersect(triB, triC, intersectionPoint))
-            outSegTips.push_back(intersectionPoint);
+        if (segmentIntersect(dB, dC, triB, triC, intersectionPoint))
+            outSegTips[arrIdx++] = intersectionPoint;
 
-        if (segmentIntersect(triC, triA, intersectionPoint))
-            outSegTips.push_back(intersectionPoint);
+        if (segmentIntersect(dC, dA, triC, triA, intersectionPoint))
+            outSegTips[arrIdx++] = intersectionPoint;
+        return arrIdx;
     }
 
 };
@@ -128,7 +127,7 @@ unique_ptr<Lines> g_lines;
 // https://stackoverflow.com/questions/3142469/determining-the-intersection-of-a-triangle-and-a-plane
 void topograph(int lvlCount, float interval) 
 {
-    LOG("topograph " << lvlCount << " " << interval);
+    //LOG("topograph " << lvlCount << " " << interval);
     Plane plane( Vec3(0,0,1), Vec3(0,0, 0) );
     //Plane plane(Vec3(0.5, 0, 1).unitized(), Vec3(0, 0, 0));
 
@@ -149,20 +148,23 @@ void topograph(int lvlCount, float interval)
     for (int lvl = 0; lvl < lvlCount; ++lvl)
     {
         int linesCountStart = lines.pairs.size();
-        vector<Vec3> intp;
+        Vec3 intp[3];
         for (int i = 0; i < mesh.m_idx.size(); i += 3) 
         {
-            const Vec3& va = mesh.m_vtx[mesh.m_idx[i]];
-            const Vec3& vb = mesh.m_vtx[mesh.m_idx[i + 1]];
-            const Vec3& vc = mesh.m_vtx[mesh.m_idx[i + 2]];
+            int ia = mesh.m_idx[i];
+            int ib = mesh.m_idx[i + 1];
+            int ic = mesh.m_idx[i + 2];
+            const Vec3& va = mesh.m_vtx[ia];
+            const Vec3& vb = mesh.m_vtx[ib];
+            const Vec3& vc = mesh.m_vtx[ic];
+            float da = mesh.m_vtxdist[ia] - plane.add_d;
+            float db = mesh.m_vtxdist[ib] - plane.add_d;
+            float dc = mesh.m_vtxdist[ic] - plane.add_d;
 
-            plane.triangleIntersect(va, vb, vc, intp);
-            if (!intp.empty()) {
-                if (intp.size() == 2) {
-                    lines.pairs.push_back(intp[0]);
-                    lines.pairs.push_back(intp[1]);
-                }
-                intp.clear();
+            int retCount = plane.triangleIntersect(da, db, dc, va, vb, vc, intp);
+            if (retCount == 2) {
+                lines.pairs.push_back(intp[0]);
+                lines.pairs.push_back(intp[1]);
             }
         }
 
@@ -170,7 +172,7 @@ void topograph(int lvlCount, float interval)
 
         plane.add_d += interval;
     }
-    LOG(lines.pairs.size() << " lines");
+    //LOG(lines.pairs.size() << " lines");
 }
 
 #ifdef EMSCRIPTEN
@@ -205,7 +207,7 @@ EMSCRIPTEN_BINDINGS(my_module)
 int main()
 {
     loadMesh("C:/projects/topograph/models/bunny.obj");
-    topograph();
+    topograph(60,20);
 }
 #else
 int main() // called when everything was loaded
