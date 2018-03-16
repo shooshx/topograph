@@ -23,8 +23,10 @@ function start() {
     //Module.paintMesh()
 
     var start = Date.now()
-    Module.topograph(60, 20);
-    Module.paintLines();
+    Module.topograph(60, 91);
+    //Module.paintLines();
+
+    Module.paintPaths(10000);
     console.log("elapsed=" + (Date.now() - start))
 }
 
@@ -44,7 +46,8 @@ function input_changed() {
     var start = Date.now()
     Module.topograph(countNum, parseFloat(interval_slider.value));
     //Module.topograph(60, 20);
-    Module.paintLines();
+    //Module.paintLines();
+    Module.paintPaths(10000);
     console.log("elapsed=" + (Date.now() - start))
 }
 
