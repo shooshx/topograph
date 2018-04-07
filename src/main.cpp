@@ -165,6 +165,7 @@ class Lines {
 public:
     //vector<Vec3> pairs;
     vector<Vec3> lines;
+    int numLevels = 0;
 };
 
 unique_ptr<Lines> g_lines;
@@ -211,11 +212,13 @@ void topograph(int lvlCount, float interval, float offset)
     Lines& lines = *g_lines;
 
     lines.lines.clear();
+    lines.numLevels = 0;
 
     float start_lines = round(tmin.z / 10.) * 10. + offset; // don't want to start at at the very furthest pixel. start abit before to have some room
     plane.add_d = start_lines;
 
     int paths = 0;
+    
 
     for (int lvl = 0; lvl < lvlCount; ++lvl)
     {
@@ -257,7 +260,7 @@ void topograph(int lvlCount, float interval, float offset)
             continue;
 
         //LOG(pairs.size() << " lines  plane range= " << start_lines << " : " << plane.add_d);
-    
+        ++lines.numLevels;
 
         // make the lines into continuous loops
         map<Vec3, pair<int,int> > pair_hash; // hash from Vec3 hash to its index in the pairs array (can point to either vec in a pair)
@@ -357,6 +360,7 @@ void topograph(int lvlCount, float interval, float offset)
 
         } while (atpair != startedAt && (atpair + 1) != startedAt);
 
+        lines.lines.back().z = 1.0; // means we should change color
         //LOG("LVL " << lvl << " paths " << paths);
     } // lvl for
 
@@ -427,13 +431,26 @@ void paintPaths(int upto)
     mat.translate(-g_mesh->m_center);
     //cout << mat << endl;
 
+    float colPos = 0;
+    float colDelta = 1.0 / lines.numLevels;
+    EM_ASM(ctx.fillStyle = 'rgb(0,0,0)');
+
     EM_ASM(ctx.beginPath());
     //LOG("--begin " << lines.lines.size());
     bool nextIsMove = true;
     for(int i = 0; i < lines.lines.size(); ++i) {
         const Vec3& v = lines.lines[i];
         if (v.x == 0.0 && v.y == 0.0) {
+            //EM_ASM(ctx.stroke());
+            EM_ASM(ctx.fill());
+            if (v.z == 1.0) {
+                colPos += colDelta;
+                int col = (int)(round(255.0*colPos));
+                EM_ASM_(ctx.fillStyle = 'rgb('+$0+','+$0+','+$0+')', col);
+            }
+            //EM_ASM(ctx.fill());
             nextIsMove = true;
+            EM_ASM(ctx.beginPath());
             continue;
         }
 
@@ -441,18 +458,15 @@ void paintPaths(int upto)
 
         
         if (nextIsMove) {
-            //EM_ASM(ctx.stroke());
-            //EM_ASM(ctx.fill());
             EM_ASM_(ctx.moveTo($0, $1), va.x, va.y);
-            //EM_ASM(ctx.beginPath());
             nextIsMove = false;
         }
         else {
             EM_ASM_(ctx.lineTo($0, $1), va.x, va.y);
         }
     }
-    EM_ASM(ctx.stroke());
-    //EM_ASM(ctx.fill());
+    //EM_ASM(ctx.stroke());
+    EM_ASM(ctx.fill());
 }
 
 EMSCRIPTEN_BINDINGS(my_module)
