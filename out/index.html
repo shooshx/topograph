@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html><head>
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=UA-2231125-9"></script>
@@ -23,15 +23,31 @@ function start() {
     //Module.paintMesh()
 
     var start = Date.now()
-    Module.topograph(60, 91);
+    Module.topograph(60, 91, 0); // 91
     //Module.paintLines();
 
     Module.paintPaths(10000);
     console.log("elapsed=" + (Date.now() - start))
+
+    mycanvas.onmousedown = handleMouseDown
+    document.onmouseup = handleMouseUp
+    document.onmousemove = handleMouseMove
+    document.onkeyup = handleKey
+    document.onkeydown = handleKey
 }
 
 var WIDTH = 800
 var HEIGHT = 800
+
+function clearCanvas() {
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0, 0, WIDTH, HEIGHT)
+}
+
+var lvlsCountNum = 60
+function callTopograph() {
+    Module.topograph(lvlsCountNum, parseFloat(interval_slider.value), parseFloat(offset_slider.value));
+}
 
 function input_changed() {
     if (count_num.value == "")
@@ -39,21 +55,131 @@ function input_changed() {
     var countNum = parseInt(count_num.value)
     if (isNaN(countNum) || countNum <= 0)
         return;
-
-    ctx.fillStyle = 'white'
-    ctx.fillRect(0, 0, WIDTH, HEIGHT)
+    lvlsCountNum = countNum
+    clearCanvas()
 
     var start = Date.now()
-    Module.topograph(countNum, parseFloat(interval_slider.value));
+    callTopograph()
     //Module.topograph(60, 20);
     //Module.paintLines();
     Module.paintPaths(10000);
     console.log("elapsed=" + (Date.now() - start))
 }
 
+var CANVAS_MARGIN = 8
+var pressedInCanvas = false
+var ctrlPressed = false
+
+function handleMouseDown(event) {
+    pressedInCanvas = true
+    Module.mouseDown((event.button == 2) ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
+}
+function handleMouseUp(event) {
+    pressedInCanvas = false
+    Module.mouseUp((event.button == 2) ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
+}
+var lastX = null, lastY = null
+// needs to return true, otherwise input number is broken in chrome
+function handleMouseMove(event) {
+    if (!pressedInCanvas)
+        return true
+    if (event.clientX == lastX && event.clientY == lastY)
+        return true; // for some reason this event arrives in clicks as well
+    lastX = event.clientX
+    lastY = event.clientY
+    var but = event.buttons
+    if (but === undefined)
+        but = event.which // for safari
+
+    Module.mouseMove(but, ctrlPressed ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
+    callTopograph();
+    clearCanvas()
+    Module.paintPaths(10000);
+    return true
+}
+
+
+function handleKey(event) {
+    if (event.ctrlKey == ctrlPressed)
+        return;
+    ctrlPressed = event.ctrlKey;
+    return false
+}
+
+
+function triggerZero() {
+    Module.zeroTransforms()
+    callTopograph();
+    clearCanvas()
+    Module.paintPaths(10000);
+}
 
 </script>
 <style>
+
+.sc-btn {
+  display: inline-block;
+  /*position: absolute;*/
+  /*font-family: "Helvetica Neue", "Helvetica", sans-serif;*/
+  border-radius: 0.4em;
+  box-shadow: inset rgba(0, 0, 0, 0.1) 0px -0.15em 0px, inset rgba(255, 255, 255, 0.2) 0px 0.15em 0px, rgba(0, 0, 0, 0.3) 0px 0.1em 0.3em;
+  text-align: center;
+  cursor: pointer;
+  overflow: hidden; 
+  
+  color: #222;
+  text-shadow: rgba(127, 127, 127, 0.4) 0 1px 0;
+  background-color: #ebebeb;
+  background-image: linear-gradient(to bottom, white, #ebebeb);   
+  
+  width: 100px;
+  height: 40px;
+  line-height: 40px;
+  margin: 7px;
+  outline:none;  /* no focus outline */
+  font-size:110%;
+}
+.sc-btn:hover {
+  color: #222;
+  background-image: linear-gradient(to bottom, white, #d2d2d2);
+  background-color: #fdfdfd;   
+}
+.sc-btn:active, .sc-check:checked+.sc-btn {
+    box-shadow: rgba(255, 255, 255, 0.2) 0 0.1em 0, inset rgba(0, 0, 0, 0.3) 0px 0.25em 1em; 
+    color: #fff;
+    background-color: #dfdfdf;
+    background-image: linear-gradient(to bottom, #479ceb, #1067c1); 
+}
+.sc-btn:checked  {
+  background-color: #dfdfdf;
+  background-image: linear-gradient(to bottom, #479ceb, #1067c1); 
+}
+.sc-btn:disabled {
+   color: #ddd;
+}
+.sc-btn[disabled="true"] {
+    box-shadow: initial;
+}
+.sc-btn[disabled="true"] > .sc-span { /* comes after */
+    opacity: 0.3; /* for buttons with image*/
+}
+
+input[type="range"]:disabled {
+    opacity: 0.4;
+}
+input:disabled + .sc-btn,
+input:disabled + .sc-btn:hover,
+input:disabled + .sc-btn:active, 
+.sc-btn[disabled="true"] {
+  color:#ddd;
+  background-image: linear-gradient(to bottom, white, #ebebeb);
+  box-shadow: initial;
+}
+.sc-btn:disabled + span {
+  opacity:0.6
+}
+
+/*---------------------------------------------------------------------*/
 
 body {
     font-family: Verdana;
@@ -70,7 +196,10 @@ body {
 }
 
 #interval_slider {
-
+    width: 400px;
+}
+#offset_slider {
+    width: 400px;
 }
 
 .slider {
@@ -103,13 +232,25 @@ body {
     cursor: pointer;
 }
 
+#btnZero {
+    margin: 0;
+    height: 22px;
+    vertical-align: bottom;
+    line-height: 22px;
+    font-size: 16px;
+    width: 60px;
+}
+
 
 </style>
 </head>
 <body id="body"  >
     <div id="controls">
-        Interval: <input class="slider" id="interval_slider" type="range" min="1" max="100" value="20" oninput="input_changed()">
+        Interval: <input class="slider" id="interval_slider" type="range" min="1" max="450" value="91" oninput="input_changed()">
         Line Count: <input id="count_num" type="number" min="1" step="1" pattern="d*" value="60" oninput="input_changed()">
+        <label id="btnZero" class="sc-btn" onclick="triggerZero()">Zero</label>
+        <br />
+        Offset: <input class="slider" id="offset_slider" type="range" min="-1000" max="1000" value="0" oninput="input_changed()">
     </div>
     <canvas id="mycanvas" width="800" height="800"></canvas>
 </body>

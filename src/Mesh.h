@@ -10,6 +10,7 @@ public:
     vector<Vec3> m_vtx;
     vector<int> m_idx;
     Vec3 m_pmax, m_pmin;
+    Vec3 m_center;
 
     vector<float> m_vtxdist;
 

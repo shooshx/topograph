@@ -143,6 +143,10 @@ public:
         return outVec;
     }
 
+    void translate(const Vec3& v) {
+        *this = multt(*this, translation(v.x, v.y, v.z));
+    }
+
     void translate(float x, float y, float z) {
         *this = multt(*this, translation(x, y, z));
     }

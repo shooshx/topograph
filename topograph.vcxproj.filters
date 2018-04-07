@@ -29,5 +29,8 @@
     <ClInclude Include="src\general.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\MatStack.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

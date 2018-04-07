@@ -61,4 +61,6 @@ void Mesh::recalcMinMax() {
         m_pmax.pmax(v);
         m_pmin.pmin(v);
     }
+
+    m_center = (m_pmax + m_pmin) * 0.5;
 }

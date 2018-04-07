@@ -18,6 +18,7 @@
   <ItemGroup>
     <ClInclude Include="src\general.h" />
     <ClInclude Include="src\Mat.h" />
+    <ClInclude Include="src\MatStack.h" />
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\Vec.h" />
   </ItemGroup>
