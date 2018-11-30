@@ -20,6 +20,7 @@ bool Mesh::loadObj(const char* path)
         if (line[0] == '#')
             continue;
         char* linep = (char*)line.c_str() + 2;
+        char* lineend = (char*)line.c_str() + line.size();
         if (line[0] == 'v') {
             Vec3 v;
             v.x = strtod(linep, &linep);
@@ -31,7 +32,11 @@ bool Mesh::loadObj(const char* path)
         }
         else if (line[0] == 'f') {
             int a = strtol(linep, &linep, 10);
+            while (*linep != ' ' && linep < lineend)
+                ++linep;
             int b = strtol(linep, &linep, 10);
+            while (*linep != ' ' && linep < lineend)
+                ++linep;
             int c = strtol(linep, &linep, 10);
             m_idx.insert(m_idx.end(), {a-1,b-1,c-1}); // indices area 1 based
         }

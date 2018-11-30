@@ -26,7 +26,7 @@ function start() {
     Module.topograph(60, 91, 0); // 91
     //Module.paintLines();
 
-    Module.paintPaths(10000);
+    doPaintPaths()
     console.log("elapsed=" + (Date.now() - start))
 
     mycanvas.onmousedown = handleMouseDown
@@ -34,6 +34,10 @@ function start() {
     document.onmousemove = handleMouseMove
     document.onkeyup = handleKey
     document.onkeydown = handleKey
+}
+
+function doPaintPaths() {
+    Module.paintPaths(10000, false, false);
 }
 
 var WIDTH = 800
@@ -62,7 +66,7 @@ function input_changed() {
     callTopograph()
     //Module.topograph(60, 20);
     //Module.paintLines();
-    Module.paintPaths(10000);
+    doPaintPaths();
     console.log("elapsed=" + (Date.now() - start))
 }
 
@@ -94,7 +98,7 @@ function handleMouseMove(event) {
     Module.mouseMove(but, ctrlPressed ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
     callTopograph();
     clearCanvas()
-    Module.paintPaths(10000);
+    doPaintPaths();
     return true
 }
 
@@ -111,8 +115,53 @@ function triggerZero() {
     Module.zeroTransforms()
     callTopograph();
     clearCanvas()
-    Module.paintPaths(10000);
+    doPaintPaths();
 }
+
+function triggerFileChanged() 
+{
+    if (editFileInput.files.length == 0)
+        return
+    var file = editFileInput.files[0]
+    
+
+    var reader = new FileReader();
+    reader.onload = function(e) { 
+        var data = e.target.result //, blob.type
+        
+        var stream = FS.writeFile('objfile.obj', data);
+
+        
+        Module.loadMesh("objfile.obj");
+
+    }
+    reader.onerror = function(e) {
+        console.log(e)
+    }
+    reader.readAsText(file); // read as data URL since we want to put it in an img src
+
+}
+
+var url = null
+
+function triggerSvg() 
+{
+    var text = Module.makeSvg(10000);
+    //console.log(svg)
+    
+
+    var blob = new Blob([text], {type: "application/json"})
+    if (url != null) {
+        URL.revokeObjectURL(url)
+    }
+    url = URL.createObjectURL(blob)
+    downLink.href = url
+    var name = "pathsvg_" + Math.floor((Math.random() * 1000) + 1) + ".svg"
+    downLink.innerHTML = name
+    downLink.download = name
+    downLink.style.visibility = "visible"  
+}
+
 
 </script>
 <style>
@@ -232,7 +281,7 @@ body {
     cursor: pointer;
 }
 
-#btnZero {
+#btnZero,#btnSvg {
     margin: 0;
     height: 22px;
     vertical-align: bottom;
@@ -249,9 +298,12 @@ body {
         Interval: <input class="slider" id="interval_slider" type="range" min="1" max="450" value="91" oninput="input_changed()">
         Line Count: <input id="count_num" type="number" min="1" step="1" pattern="d*" value="60" oninput="input_changed()">
         <label id="btnZero" class="sc-btn" onclick="triggerZero()">Zero</label>
-        <br />
+        <input id="editFileInput" type="file" onchange="return triggerFileChanged()">
+        <label id="btnSvg" class="sc-btn" onclick="triggerSvg()">Svg</label><a id="downLink" href=""></a>
+        <br />     
         Offset: <input class="slider" id="offset_slider" type="range" min="-1000" max="1000" value="0" oninput="input_changed()">
     </div>
     <canvas id="mycanvas" width="800" height="800"></canvas>
+
 </body>
 </html>

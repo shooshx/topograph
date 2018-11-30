@@ -8,6 +8,7 @@
 #include <map>
 #include <cfloat>
 #include <algorithm>
+#include <sstream>
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
@@ -231,6 +232,10 @@ void topograph(int lvlCount, float interval, float offset)
             int ia = mesh.m_idx[i];
             int ib = mesh.m_idx[i + 1];
             int ic = mesh.m_idx[i + 2];
+            if (ia < 0 || ib < 0 || ic < 0) {
+                LOG_ERR("negative index");
+                return;
+            }
             const Vec3& va = mesh.m_vtx[ia];
             const Vec3& vb = mesh.m_vtx[ib];
             const Vec3& vc = mesh.m_vtx[ic];
@@ -416,7 +421,9 @@ void zeroTransforms() {
     EM_ASM(ctx.stroke());
 }*/
 
-void paintPaths(int upto)
+stringstream g_svg;
+
+void paintPaths(int upto, bool fill, bool makeSvg)
 {
     Lines& lines = *g_lines;
 
@@ -436,13 +443,21 @@ void paintPaths(int upto)
     EM_ASM(ctx.fillStyle = 'rgb(0,0,0)');
 
     EM_ASM(ctx.beginPath());
+    if (makeSvg) {
+        g_svg << "<path d=\""; 
+    }
     //LOG("--begin " << lines.lines.size());
     bool nextIsMove = true;
     for(int i = 0; i < lines.lines.size(); ++i) {
         const Vec3& v = lines.lines[i];
         if (v.x == 0.0 && v.y == 0.0) {
-            //EM_ASM(ctx.stroke());
-            EM_ASM(ctx.fill());
+            
+            if (fill) {
+                EM_ASM(ctx.fill());
+            }
+            else {
+                EM_ASM(ctx.stroke());
+            }
             if (v.z == 1.0) {
                 colPos += colDelta;
                 int col = (int)(round(255.0*colPos));
@@ -451,6 +466,10 @@ void paintPaths(int upto)
             //EM_ASM(ctx.fill());
             nextIsMove = true;
             EM_ASM(ctx.beginPath());
+            if (makeSvg) {
+                g_svg << "\"/>\n<path d=\""; //M10 10"/>
+            }
+
             continue;
         }
 
@@ -459,15 +478,39 @@ void paintPaths(int upto)
         
         if (nextIsMove) {
             EM_ASM_(ctx.moveTo($0, $1), va.x, va.y);
+            if (makeSvg) {
+                g_svg << "M " << va.x << " "  << va.y << " ";
+            }
             nextIsMove = false;
         }
         else {
             EM_ASM_(ctx.lineTo($0, $1), va.x, va.y);
+            if (makeSvg) {
+                g_svg << "L " << va.x << " " << va.y << " ";
+            }
         }
+
     }
-    //EM_ASM(ctx.stroke());
-    EM_ASM(ctx.fill());
+
+    if (fill) {
+        EM_ASM(ctx.fill());
+    }
+    else {
+        EM_ASM(ctx.stroke());
+    }
+    if (makeSvg) {
+        g_svg << "\"/>\n";
+    }
 }
+
+string makeSvg(int upto) {
+    g_svg = stringstream();
+    g_svg << "<svg width=\"700\" height=\"700\" xmlns=\"http://www.w3.org/2000/svg\">\n";
+    paintPaths(upto, true, true);
+    g_svg << "</svg>";
+    return g_svg.str();
+}
+
 
 EMSCRIPTEN_BINDINGS(my_module)
 {
@@ -480,6 +523,7 @@ EMSCRIPTEN_BINDINGS(my_module)
     emscripten::function("mouseUp", &mouseUp);
     emscripten::function("mouseMove", &mouseMove);
     emscripten::function("zeroTransforms", &zeroTransforms);
+    emscripten::function("makeSvg", &makeSvg);
     
 }
 
@@ -489,7 +533,7 @@ EMSCRIPTEN_BINDINGS(my_module)
 #ifndef EMSCRIPTEN
 int main()
 {
-    loadMesh("C:/projects/topograph/models/bunny.obj");
+    loadMesh("C:/projects/my_topograph/models/cube.obj");
     //topograph(60,20);
     //topograph(60, 445, 0); // duplicate vertex!
     topograph(60, 91, 0);
