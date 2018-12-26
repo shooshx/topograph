@@ -30,7 +30,7 @@ bool loadMesh(const string& path)
     Mesh& mesh = *g_mesh;
     mesh.loadObj(path.c_str());
 
-    LOG("loaded " << mesh.m_vtx.size() << "  " << mesh.m_idx.size());
+    LOG("loaded vtx=" << mesh.m_vtx.size() << "  idx=" << mesh.m_idx.size() << " poly=" << mesh.m_idx.size() / 3);
     Vec3 d = mesh.m_pmax - mesh.m_pmin;
     LOG("range " << mesh.m_pmax << " : " << mesh.m_pmin << " = " << d);
 

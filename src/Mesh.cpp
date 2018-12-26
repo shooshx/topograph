@@ -17,11 +17,11 @@ bool Mesh::loadObj(const char* path)
     while (!ifs.eof()) {
         string line;
         getline(ifs, line);
-        if (line[0] == '#')
+        if (line.size() < 4 || line[0] == '#')
             continue;
         char* linep = (char*)line.c_str() + 2;
         char* lineend = (char*)line.c_str() + line.size();
-        if (line[0] == 'v') {
+        if (line[0] == 'v' && line[1] == ' ') {
             Vec3 v;
             v.x = strtod(linep, &linep);
             v.y = strtod(linep, &linep);
