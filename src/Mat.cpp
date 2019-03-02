@@ -1,5 +1,6 @@
 #include "Mat.h"
 
+namespace topo {
 
 Mat3 Mat4::toNormalsTrans() const {
 	Mat3 v;
@@ -29,4 +30,6 @@ Mat3 Mat3::invert() const {
 	result(1,2) = -(A(0,0)*A(2,1)-A(2,0)*A(0,1))*invdet;
 	result(2,2) =  (A(0,0)*A(1,1)-A(1,0)*A(0,1))*invdet;
 	return result;
+}
+
 }

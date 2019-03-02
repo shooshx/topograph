@@ -4,6 +4,8 @@
 #include <cmath>
 #include <ostream>
 
+namespace topo {
+
 typedef unsigned char byte;
 typedef unsigned int uint;
 using namespace std;
@@ -360,3 +362,5 @@ struct Recti
     int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
 };
+
+}

@@ -4,6 +4,7 @@
 #include "general.h"
 using namespace std;
 
+namespace topo {
 //#define MAX_MATSTACK (20)
 
 class MatStack
@@ -39,7 +40,7 @@ public:
     Mat4& peek(int back) {
         if (back == 0)
             return m_cur.m;
-        if (m_s.size() < back)
+        if ((int)m_s.size() < back)
             throw std::runtime_error("matrix stack underflow(peek)");
         return m_s[m_s.size() - back].m;
     }
@@ -71,3 +72,5 @@ private:
 
     vector<MatEntry> m_s;
 };
+
+}

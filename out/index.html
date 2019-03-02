@@ -16,14 +16,15 @@
 "use strict";
 
 var ctx;
+var INST = 0
 function start() {
     ctx = mycanvas.getContext('2d')
 
-    Module.loadMesh("models/bunny.obj");
+    Module.loadMesh(INST, "models/bunny.obj", false, true);
     //Module.paintMesh()
 
     var start = Date.now()
-    Module.topograph(60, 91, 0); // 91
+    Module.topograph(INST, 60, 91, 0); // 91
     //Module.paintLines();
 
     doPaintPaths()
@@ -37,7 +38,7 @@ function start() {
 }
 
 function doPaintPaths() {
-    Module.paintPaths(10000, false, false);
+    Module.paintPaths(INST, 10000, fill_checkbox.checked, false);
 }
 
 var WIDTH = 800
@@ -50,7 +51,7 @@ function clearCanvas() {
 
 var lvlsCountNum = 60
 function callTopograph() {
-    Module.topograph(lvlsCountNum, parseFloat(interval_slider.value), parseFloat(offset_slider.value));
+    Module.topograph(INST, lvlsCountNum, parseFloat(interval_slider.value), parseFloat(offset_slider.value));
 }
 
 function input_changed() {
@@ -76,11 +77,11 @@ var ctrlPressed = false
 
 function handleMouseDown(event) {
     pressedInCanvas = true
-    Module.mouseDown((event.button == 2) ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
+    Module.mouseDown(INST, (event.button == 2) ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
 }
 function handleMouseUp(event) {
     pressedInCanvas = false
-    Module.mouseUp((event.button == 2) ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
+    Module.mouseUp(INST, (event.button == 2) ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
 }
 var lastX = null, lastY = null
 // needs to return true, otherwise input number is broken in chrome
@@ -95,7 +96,7 @@ function handleMouseMove(event) {
     if (but === undefined)
         but = event.which // for safari
 
-    Module.mouseMove(but, ctrlPressed ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
+    Module.mouseMove(INST, but, ctrlPressed ? 1 : 0, event.clientX - CANVAS_MARGIN, event.clientY - CANVAS_MARGIN)
     callTopograph();
     clearCanvas()
     doPaintPaths();
@@ -112,7 +113,7 @@ function handleKey(event) {
 
 
 function triggerZero() {
-    Module.zeroTransforms()
+    Module.zeroTransforms(INST)
     callTopograph();
     clearCanvas()
     doPaintPaths();
@@ -132,7 +133,7 @@ function triggerFileChanged()
         var stream = FS.writeFile('objfile.obj', data);
 
         
-        Module.loadMesh("objfile.obj");
+        Module.loadMesh(INST, "objfile.obj", false, true);
 
     }
     reader.onerror = function(e) {
@@ -146,7 +147,7 @@ var url = null
 
 function triggerSvg() 
 {
-    var text = Module.makeSvg(10000);
+    var text = Module.makeSvg(INST, 10000);
     //console.log(svg)
     
 
@@ -300,6 +301,8 @@ body {
         <label id="btnZero" class="sc-btn" onclick="triggerZero()">Zero</label>
         <input id="editFileInput" type="file" onchange="return triggerFileChanged()">
         <label id="btnSvg" class="sc-btn" onclick="triggerSvg()">Svg</label><a id="downLink" href=""></a>
+        <input id="fill_checkbox" type="checkbox" oninput="input_changed()"></input>
+          <label for="fill_checkbox">Fill</label>
         <br />     
         Offset: <input class="slider" id="offset_slider" type="range" min="-1000" max="1000" value="0" oninput="input_changed()">
     </div>

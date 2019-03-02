@@ -1,7 +1,13 @@
 #include "Mesh.h"
+#include "general.h"
 #include <string>
 #include <fstream>
 #include <cfloat>
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+#endif
+
+namespace topo {
 
 bool Mesh::loadObj(const char* path)
 {
@@ -42,9 +48,42 @@ bool Mesh::loadObj(const char* path)
         }
     }
 
-    return true;
+    LOG("loaded mesh min=" << m_pmin << " - " << m_pmax << ": " << m_vtx[0] << m_vtx[1] << m_vtx[2]);
 
+
+    return true;
 }
+
+bool Mesh::loadFromJs(const char* objname)
+{
+#ifdef EMSCRIPTEN
+    m_pmax = Vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+    m_pmin = Vec3(FLT_MAX, FLT_MAX, FLT_MAX);
+    
+    
+    int vtx_len = EM_ASM_INT(return window[Pointer_stringify($0)].vertexPositions.length, objname);
+    m_vtx.reserve(vtx_len);
+    for(int i = 0; i < vtx_len; i += 3) {
+        Vec3 v;
+        v.x = EM_ASM_DOUBLE(return window[Pointer_stringify($0)].vertexPositions[$1], objname, i);
+        v.y = EM_ASM_DOUBLE(return window[Pointer_stringify($0)].vertexPositions[$1], objname, i+1);
+        v.z = EM_ASM_DOUBLE(return window[Pointer_stringify($0)].vertexPositions[$1], objname, i+2);
+        m_vtx.push_back(v);
+        m_pmax.pmax(v);
+        m_pmin.pmin(v);        
+    }
+    int idx_len = EM_ASM_INT(return window[Pointer_stringify($0)].triangles.length, objname);
+    m_idx.reserve(idx_len);
+    for(int i = 0; i < idx_len; ++i) {
+        int a = EM_ASM_INT(return window[Pointer_stringify($0)].triangles[$1], objname, i); 
+        m_idx.push_back(a);
+    }
+    LOG("Loaded " << objname << " vtx=" << vtx_len << "(" << m_vtx[0].x << ")" << " idx=" << idx_len << "(" << m_idx[0] << ") -- " 
+        << m_pmin << " - " << m_pmax << ":  " << m_vtx[0] << m_vtx[1] << m_vtx[2]);
+#endif
+    return true;
+}
+
 
 void Mesh::scale(const Vec3& f) {
     for(auto& v: m_vtx) {
@@ -68,4 +107,7 @@ void Mesh::recalcMinMax() {
     }
 
     m_center = (m_pmax + m_pmin) * 0.5;
+    LOG("mesh-center=" << m_center);
+}
+
 }

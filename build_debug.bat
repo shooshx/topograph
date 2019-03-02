@@ -1,3 +1,4 @@
+rem run C:\lib\emscripten\emsdk\emsdk_env.bat before
 rem %EMSCRIPTEN%\emcc --clear-cache
 rem --tracing
 rem -D_LIBCPP_DEBUG=0  

@@ -7,6 +7,7 @@
 
 using namespace std;
 
+namespace topo {
 
 #define DISALLOW_COPY(className) \
      className(const className &) = delete; \
@@ -35,3 +36,5 @@ inline double mRound(double x) {
 #define LOG(strm) do { std::cout << strm << std::endl; } while(0)
 
 #define LOG_ERR(strm) do { std::cout << "ERROR: " << strm << std::endl; } while(0)
+
+}

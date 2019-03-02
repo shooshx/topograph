@@ -5,6 +5,8 @@
 
 #define MY_PI (3.14159265358979323846)
 
+namespace topo {
+
 template<typename T>
 inline void mswap(T& a, T& b) {
     T t = a;
@@ -193,3 +195,4 @@ inline ostream& operator<<(ostream& st, const Mat4& m) {
 }
 
 
+}
