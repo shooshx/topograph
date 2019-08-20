@@ -38,7 +38,7 @@ function start() {
 }
 
 function doPaintPaths() {
-    Module.paintPaths(INST, 10000, fill_checkbox.checked, false);
+    Module.paintPaths(INST, 10000, fill_checkbox.checked, false, zoom_slider.value/100.0);
 }
 
 var WIDTH = 800
@@ -305,6 +305,7 @@ body {
           <label for="fill_checkbox">Fill</label>
         <br />     
         Offset: <input class="slider" id="offset_slider" type="range" min="-1000" max="1000" value="0" oninput="input_changed()">
+        Zoom: <input class="slider" id="zoom_slider" type="range" min="40" max="150" value="100" oninput="input_changed()">
     </div>
     <canvas id="mycanvas" width="800" height="800"></canvas>
 

@@ -271,6 +271,11 @@ void initPlane_ext(int instance, float nx, float ny, float nz, float px, float p
 
 //vector<Vec3> pairs_unrounded;
 
+// TBD - Teapot is pretty bad
+struct IntersectInfo {
+    int index; // index of the 
+};
+
 int planeIntersect(State& state, const Plane& plane, vector<Vec3>& pairs)
 {
     Mesh& mesh = *state.m_mesh;
@@ -304,7 +309,7 @@ int planeIntersect(State& state, const Plane& plane, vector<Vec3>& pairs)
 
         int retCount = plane.triangleIntersect(da, db, dc, va, vb, vc, intp);
         if (retCount == 2) {
-            Vec3 p0 = vRound(intp[0]);
+            Vec3 p0 = vRound(intp[0]);  // TBD this 
             Vec3 p1 = vRound(intp[1]);
             if (p0 == p1) {
                 continue;
@@ -491,9 +496,10 @@ void topograph(int instance, int lvlCount, float interval, float offset)
 
     int paths = 0;
     
+    vector<Vec3> pairs;
     for (int lvl = 0; lvl < lvlCount; ++lvl)
     {
-        vector<Vec3> pairs;
+        pairs.clear();
 
         plane.add_d = at_dist;
         int lvlLines = planeIntersect(state, plane, pairs);
@@ -573,7 +579,7 @@ void zeroTransforms(int instance) {
 
 stringstream g_svg;
 
-void paintPaths(int instance, int upto, bool fill, bool makeSvg)
+void paintPaths(int instance, int upto, bool fill, bool makeSvg, float zoom)
 {
     M_CHECK(instance < g_instances.size());
     auto& state = g_instances[instance];
@@ -626,8 +632,9 @@ void paintPaths(int instance, int upto, bool fill, bool makeSvg)
         }
 
         Vec3 va = mat.transformVec(v);
-        va.x += CANVAS_CENTER;
-        va.y += CANVAS_CENTER;
+        va.x = va.x * zoom + CANVAS_CENTER;
+        va.y = va.y * zoom + CANVAS_CENTER;
+        
         
         if (nextIsMove) {
             EM_ASM_(ctx.moveTo($0, $1), va.x, va.y);
@@ -659,7 +666,7 @@ void paintPaths(int instance, int upto, bool fill, bool makeSvg)
 string makeSvg(int instance, int upto) {
     g_svg = stringstream();
     g_svg << "<svg width=\"700\" height=\"700\" xmlns=\"http://www.w3.org/2000/svg\">\n";
-    paintPaths(instance, upto, true, true);
+    paintPaths(instance, upto, true, true, 1.0);
     g_svg << "</svg>";
     return g_svg.str();
 }
